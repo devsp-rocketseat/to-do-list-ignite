@@ -1,48 +1,29 @@
 import { useState } from 'react'
+import { FiTrash, FiCheckSquare } from 'react-icons/fi'
+
+import { useTodos } from '../hooks/useTodos'
 
 import '../styles/tasklist.scss'
 
-import { FiTrash, FiCheckSquare } from 'react-icons/fi'
-
-interface Task {
-  id: number;
-  title: string;
-  isComplete: boolean;
-}
-
 export function TaskList() {
-  const [tasks, setTasks] = useState<Task[]>([]);
-  const [newTaskTitle, setNewTaskTitle] = useState('');
+  const {
+    dataTodos,
+    loadingGetTodos,
+    createTodo,
+    deleteTodo,
+    toggleCompleted
+  } = useTodos()
 
-  function handleCreateNewTask() {
-    if (newTaskTitle === '') return
+  const [newTaskTitle, setNewTaskTitle] = useState('')
 
-    const newTask = {
-      id: Date.now(),
+  const handleCreateNewTask = () => {
+    createTodo({
       title: newTaskTitle,
-      isComplete: false
-    }
-
-    setTasks([...tasks, newTask])
-
-    setNewTaskTitle('')
-    document.getElementById('inputNewTask')?.focus()
-  }
-
-  function handleToggleTaskCompletion(id: number) {
-    const newArrayTasks = tasks.map(task => {
-      if (task.id === id) task.isComplete = !task.isComplete
-      return task
+      completed: false
     })
-
-    setTasks(newArrayTasks)
   }
 
-  function handleRemoveTask(id: number) {
-    const newArrayTasks = tasks.filter(task => task.id !== id)
-
-    setTasks(newArrayTasks)
-  }
+  if (loadingGetTodos) return <p>Loading...</p>
 
   return (
     <section className="task-list container">
@@ -65,27 +46,26 @@ export function TaskList() {
 
       <main>
         <ul>
-          {tasks.map(task => (
-            <li key={task.id}>
-              <div className={task.isComplete ? 'completed' : ''} data-testid="task" >
+          {dataTodos.map(task => (
+            <li key={task._id}>
+              <div className={task.completed ? 'completed' : ''} data-testid="task" >
                 <label className="checkbox-container">
                   <input
                     type="checkbox"
                     readOnly
-                    checked={task.isComplete}
-                    onClick={() => handleToggleTaskCompletion(task.id)}
+                    checked={task.completed}
+                    onClick={() => toggleCompleted(task._id)}
                   />
                   <span className="checkmark"></span>
                 </label>
                 <p>{task.title}</p>
               </div>
 
-              <button type="button" data-testid="remove-task-button" onClick={() => handleRemoveTask(task.id)}>
+              <button type="button" data-testid="remove-task-button" onClick={() => deleteTodo(task._id)}>
                 <FiTrash size={16} />
               </button>
             </li>
           ))}
-
         </ul>
       </main>
     </section>
